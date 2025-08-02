@@ -1,0 +1,42 @@
+@Host:  = http://localhost:5042
+
+POST {{Host:}}/api/contacts
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "phoneNumber": "+998900001001",
+  "address": "Lissabon, Portugal"
+}
+###
+
+GET {{Host:}}/api/contacts
+###
+
+GET {{Host:}}/api/contacts/1
+###
+
+PATCH {{Host:}}/api/contacts/1
+Content-Type: application/json
+
+{
+  "phoneNumber": "+998977777777"
+}
+###
+
+PUT {{Host:}}/api/contacts/1
+Content-Type: application/json
+
+{
+  "firstName": "Toshmat",
+  "lastName": "Eshmatov",
+  "email": "toshmat@example.com",
+  "phoneNumber": "+998900001001",
+  "address": "Tashkent, Uzbekistan"
+}
+###
+
+DELETE {{Host:}}/api/contacts/1
+###
