@@ -1,52 +1,31 @@
-using ContactsApi.Exceptions;
-using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Text.Json;
+using ContactsApi.Exceptions;
 
 namespace ContactsApi.Middlewares;
 
-public class ExceptionHandlingMiddleware
+public class ExceptionHandlingMiddleware(
+    ILogger<ExceptionHandlingMiddleware> logger,
+    RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
-
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception occurred.");
+            logger.LogError(ex, "Anhandled exception occured");
 
-            context.Response.ContentType = "application/json";
-
-            var (statusCode, title) = ex switch
+            (int code, string message) = ex switch
             {
-                CustomNotFoundException => (HttpStatusCode.NotFound, "Not Found"),
-                CustomConflictException => (HttpStatusCode.Conflict, "Conflict"),
-                CustomBadRequestException => (HttpStatusCode.BadRequest, "Bad Request"),
-                _ => (HttpStatusCode.InternalServerError, "Internal Server Error")
+                CustomConflictException conflict => ((int)HttpStatusCode.Conflict, conflict.Message),
+                CustomNotFoundException notFound => ((int)HttpStatusCode.NotFound, notFound.Message),
+                _ => ((int)HttpStatusCode.InternalServerError, ex.Message)
             };
 
-            context.Response.StatusCode = (int)statusCode;
-
-            var problem = new ProblemDetails
-            {
-                Status = (int)statusCode,
-                Title = title,
-                Detail = ex.Message
-            };
-
-            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-            await context.Response.WriteAsync(JsonSerializer.Serialize(problem, options));
+            context.Response.StatusCode = code;
+            await context.Response.WriteAsync(message);
         }
     }
 }

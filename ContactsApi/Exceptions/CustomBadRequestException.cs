@@ -1,6 +1,4 @@
 namespace ContactsApi.Exceptions;
 
-public class CustomBadRequestException : Exception
-{
-    public CustomBadRequestException(string message) : base(message) { }
-}
+public class CustomBadRequestException(string errorMessage)
+     : Exception(errorMessage) { }

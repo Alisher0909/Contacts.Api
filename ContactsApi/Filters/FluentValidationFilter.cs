@@ -1,48 +1,33 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ContactsApi.Filters;
 
-public class FluentValidationFilter(IServiceProvider serviceProvider) : IAsyncActionFilter
+public class AsyncAutoValidation(IServiceProvider serviceProvider) : IAsyncActionFilter
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    public static int OrderLowerThanModelStateInvalidFilter => -2001;
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        foreach (var argument in context.ActionArguments)
+        foreach (var parameter in context.ActionDescriptor.Parameters)
         {
-            if (argument.Value is null) continue;
+            var isParameterFromBodyOrQuery =
+                parameter.BindingInfo?.BindingSource == BindingSource.Body ||
+                parameter.BindingInfo?.BindingSource == BindingSource.Query;
 
-            var validatorType = typeof(IValidator<>).MakeGenericType(argument.Value.GetType());
-            var validator = _serviceProvider.GetService(validatorType) as IValidator;
+            var canBeValidated = isParameterFromBodyOrQuery && parameter.ParameterType.IsClass;
+            var parameterGenerictype = typeof(IValidator<>).MakeGenericType(parameter.ParameterType);
 
-            if (validator is not null)
+            if (canBeValidated && serviceProvider.GetService(parameterGenerictype) is IValidator validator)
             {
-                var validationContext = new ValidationContext<object>(argument.Value!);
-                var validationResult = await validator.ValidateAsync(validationContext);
-
-                if (!validationResult.IsValid)
-                {
-                    var errors = validationResult.Errors
-                        .GroupBy(e => e.PropertyName)
-                        .ToDictionary(
-                            g => g.Key,
-                            g => g.Select(e => e.ErrorMessage).ToArray()
-                        );
-
-                    var problemDetails = new ValidationProblemDetails(errors)
-                    {
-                        Status = StatusCodes.Status400BadRequest,
-                        Title = "One or more validation errors occurred."
-                    };
-
-                    context.Result = new BadRequestObjectResult(problemDetails);
-                    return;
-                }
+                var subject = context.ActionArguments[parameter.Name];
+                var result = await validator.ValidateAsync(new ValidationContext<object?>(subject), context.HttpContext.RequestAborted);
+                if (result.IsValid is false)
+                    result.AddToModelState(context.ModelState, null);
             }
         }
-
         await next();
     }
 }

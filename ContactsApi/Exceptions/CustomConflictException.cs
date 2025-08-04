@@ -1,6 +1,4 @@
 namespace ContactsApi.Exceptions;
 
-public class CustomConflictException : Exception
-{
-    public CustomConflictException(string message) : base(message) { }
-}
+public class CustomConflictException(string errorMessage)
+     : Exception(errorMessage) { }

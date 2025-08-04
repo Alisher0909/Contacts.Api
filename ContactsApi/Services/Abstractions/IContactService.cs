@@ -1,16 +1,13 @@
-using ContactsApi.Dtos;
-
-namespace ContactsApi.Services;
+namespace ContactsApi.Services.Abstractions;
 
 public interface IContactService
 {
-    Task<IEnumerable<ContactDto>> GetAllAsync(int page, int limit, string? query);
-    Task<ContactDto?> GetByIdAsync(int id);
-    Task<ContactDto> CreateAsync(CreateContactDto dto);
-    Task UpdateAsync(int id, UpdateContactDto dto);
-    Task PatchAsync(int id, PatchContactDto dto);
-    Task DeleteAsync(int id);
-
-    Task<bool> EmailExistsAsync(string email, int? excludeId = null);
-    Task<bool> PhoneExistsAsync(string phoneNumber, int? excludeId = null);
+    ValueTask<Contact> CreateContactAsync(CreateContact contact, CancellationToken cancellationToken = default);
+    ValueTask<IEnumerable<Contact>> GetAllAsync(CancellationToken cancellationToken = default);
+    ValueTask<Contact?> GetSingleOrDefaultAsync(int id, CancellationToken cancellationToken = default);
+    ValueTask<Contact> GetSingleAsync(int id, CancellationToken cancellationToken = default);
+    ValueTask<Contact> UpdateContactAsync(int id, UpdateContact contact, CancellationToken cancellationToken = default);
+    ValueTask<bool> ExistsAsync(string title, CancellationToken cancellationToken = default);
+    ValueTask<Contact> DeleteAsync(int id, CancellationToken cancellationToken = default);
+    ValueTask<Contact> PatchAsync(int id, PatchContact contact, CancellationToken cancellationToken = default);
 }
