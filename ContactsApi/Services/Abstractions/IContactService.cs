@@ -1,3 +1,5 @@
+using ContactsApi.Models;
+
 namespace ContactsApi.Services.Abstractions;
 
 public interface IContactService

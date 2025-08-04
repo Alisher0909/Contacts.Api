@@ -2,7 +2,7 @@ using AutoMapper;
 using ContactsApi.Models;
 using ContactsApi.Dtos;
 using ContactsApi.Exceptions;
-using ContactsApi.Abstractions;
+using ContactsApi.Services.Abstractions;
 
 namespace ContactsApi.Services;
 
@@ -41,10 +41,10 @@ public class ContactService(IMapper mapper) : IContactService
         contacts.Remove(contactToUpdate.PhoneNumber!);
         mapper.Map(contact, contactToUpdate);
         contactToUpdate.CreatedAt = originalCreatedAt;
-        contactToUpdate.UpdatedAt = DateTimeOffset.Now;
+        contactToUpdate.UpdatedAt = DateTimeOffset.UtcNow;
         contacts[contactToUpdate.PhoneNumber!] = contactToUpdate;
         return contactToUpdate;
-    }
+    }   
 
     public ValueTask<bool> ExistsAsync(string title, CancellationToken cancellationToken = default)
         => ValueTask.FromResult(contacts.ContainsKey(title));

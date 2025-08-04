@@ -1,4 +1,5 @@
 using ContactsApi.Dtos;
+using ContactsApi.Services.Abstractions;
 using FluentValidation;
 
 namespace ContactsApi.Validators;

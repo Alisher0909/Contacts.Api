@@ -7,7 +7,7 @@ Content-Type: application/json
   "firstName": "John",
   "lastName": "Doe",
   "email": "john@example.com",
-  "phoneNumber": "+998900001001",
+  "phoneNumber": "+998900001111",
   "address": "Lissabon, Portugal"
 }
 ###
@@ -22,7 +22,7 @@ PATCH {{Host:}}/api/contacts/1
 Content-Type: application/json
 
 {
-  "phoneNumber": "+998910001010"
+  "firstName": "Rice"
 }
 ###
 
