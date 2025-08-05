@@ -22,7 +22,7 @@ PATCH {{Host:}}/api/contacts/1
 Content-Type: application/json
 
 {
-  "firstName": "Rice"
+  "phoneNumber": "+998991231231"
 }
 ###
 
