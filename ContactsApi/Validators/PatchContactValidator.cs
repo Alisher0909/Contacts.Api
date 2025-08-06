@@ -1,35 +1,23 @@
+using ContactsApi.Abstractions;
 using ContactsApi.Dtos;
-using ContactsApi.Services.Abstractions;
 using FluentValidation;
 
 namespace ContactsApi.Validators;
 
 public class PatchContactValidator : AbstractValidator<PatchContactDto>
 {
-    public PatchContactValidator()
+    public PatchContactValidator(IContactService service)
     {
-        ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
-
-        RuleFor(x => x.FirstName)
-            .MinimumLength(2)
-            .MaximumLength(100);
-
-        RuleFor(x => x.LastName)
-            .MinimumLength(2)
-            .MaximumLength(100);
-
-        RuleFor(x => x.Email)
-            .EmailAddress()
-            .When(x => x.Email is { Length: > 0 })
-            .WithMessage("Email address is invalid.");
-
-        RuleFor(x => x.PhoneNumber)
+        ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Stop;
+        RuleFor(c => c.Id)
+            .Cascade(CascadeMode.Stop)
+            .MustAsync(async (id, token) => await service.IsIdExistsAsync(id, token))
+            .WithMessage((dto, id) => $"Contact with id '{id}' doesn't exist.");
+        RuleFor(c => c.PhoneNumber)
             .NotEmpty()
-            .Length(13)
-            .Must(phone => phone is { Length: > 0 } && 
-                        phone.StartsWith("+998") && 
-                        phone[0] == '+' && 
-                        phone.Skip(1).All(char.IsDigit))
-            .WithMessage("PhoneNumber must start with '+998' and contain only digits after '+'.");
-    }   
+            .WithMessage("Phone number is required")
+            .Matches(@"^\+998\d{9}$")
+            .MustAsync(async (phoneNumber, token) => await service.IsPhoneExistsAsync(phoneNumber, token) is false)
+            .WithMessage("Contact phone number must be unique");
+    }
 }

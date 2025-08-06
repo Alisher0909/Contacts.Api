@@ -1,105 +1,55 @@
 using AutoMapper;
-using ContactsApi.Database;
+using ContactsApi.Abstractions;
 using ContactsApi.Models;
-using ContactsApi.Dtos;
-using ContactsApi.Exceptions;
-using ContactsApi.Services.Abstractions;
-using Microsoft.EntityFrameworkCore;
+using ContactsApi.Repositories.Abstractions;
 
 namespace ContactsApi.Services;
 
-public class ContactService(AppDbContext dbContext, IMapper mapper) : IContactService
+public class ContactService(IContactRepository repository, IMapper mapper) : IContactService
 {
-    public async ValueTask<Contact> CreateContactAsync(CreateContact contact, CancellationToken cancellationToken)
+    public async ValueTask<Models.Contact> CreateContactAsync(CreateContact createdContact, CancellationToken cancellationToken = default)
     {
-        var exists = await dbContext.Contacts
-            .AnyAsync(c => c.PhoneNumber == contact.PhoneNumber, cancellationToken);
-
-        if (exists)
-            throw new CustomConflictException($"Contact with this phone number '{contact.PhoneNumber}' already exists.");
-
-        var newContact = mapper.Map<Contact>(contact);
-        newContact.CreatedAt = DateTimeOffset.UtcNow;
-
-        await dbContext.Contacts.AddAsync(newContact, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return newContact;
+        var contact = await repository.InsertAsync(mapper.Map<Entities.Contact>(createdContact), cancellationToken);
+        return mapper.Map<Models.Contact>(contact);
     }
 
-    public async ValueTask<IEnumerable<Contact>> GetAllAsync(CancellationToken cancellationToken)
+    public async ValueTask<IEnumerable<Models.Contact>> GetAllContactsAsync(CancellationToken cancellationToken = default)
     {
-        return await dbContext.Contacts.ToListAsync(cancellationToken);
+        var contacts = await repository.GetAllAsync(cancellationToken);
+        return contacts.Select(mapper.Map<Models.Contact>);
     }
 
-    public async ValueTask<Contact?> GetSingleOrDefaultAsync(int id, CancellationToken cancellationToken = default)
+    public async ValueTask<Models.Contact> GetSingleContactAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Contacts
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        var contact = await repository.GetSingleAsync(id, cancellationToken);
+        return mapper.Map<Models.Contact>(contact);
     }
 
-    public async ValueTask<Contact> GetSingleAsync(int id, CancellationToken cancellationToken = default)
+    public async ValueTask<Models.Contact> UpdateContactAsync(int id, UpdateContact contact, CancellationToken cancellationToken = default)
     {
-        var contact = await dbContext.Contacts
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-
-        return contact ?? throw new CustomNotFoundException($"Contact with id '{id}' not found!");
+        var found = await repository.GetSingleAsync(id, cancellationToken);
+        found.UpdatedAt = DateTimeOffset.UtcNow;
+        mapper.Map(contact,found);
+        return mapper.Map<Models.Contact>(await repository.UpdateAsync(found, cancellationToken));
     }
 
-    public async ValueTask<Contact> UpdateContactAsync(int id, UpdateContact updatedDto, CancellationToken cancellationToken = default)
+    public async ValueTask<Models.Contact> UpdateSinglePartOfContactAsync(int id, PatchContact patchContact, CancellationToken cancellationToken = default)
     {
-        var contact = await GetSingleAsync(id, cancellationToken);
-
-        var originalCreatedAt = contact.CreatedAt;
-        mapper.Map(updatedDto, contact);
-        contact.CreatedAt = originalCreatedAt;
-        contact.UpdatedAt = DateTimeOffset.UtcNow;
-
-        dbContext.Contacts.Update(contact);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return contact;
+        var found = await repository.GetSingleAsync(id, cancellationToken);
+        found.UpdatedAt = DateTimeOffset.UtcNow;
+        mapper.Map(patchContact,found);
+        return mapper.Map<Models.Contact>(await repository.UpdateSinglePartAsync(found, cancellationToken));
     }
 
-    public async ValueTask<Contact> PatchAsync(int id, PatchContact patchContact, CancellationToken cancellationToken = default)
-    {
-        var contact = await GetSingleAsync(id, cancellationToken);
+    public async ValueTask DeleteContactAsync(int id, CancellationToken cancellationToken = default)
+        => await repository.DeleteAsync(id, cancellationToken);
 
-        if (!string.IsNullOrEmpty(patchContact.PhoneNumber) && patchContact.PhoneNumber != contact.PhoneNumber)
-        {
-            var exists = await dbContext.Contacts
-                .AnyAsync(c => c.PhoneNumber == patchContact.PhoneNumber, cancellationToken);
-            if (exists)
-                throw new CustomConflictException($"Contact with this phone number '{patchContact.PhoneNumber}' already exists.");
+    public async ValueTask<bool> IsEmailExistsAsync(string Email, CancellationToken cancellationToken = default)
+        => await repository.IsEmailExistsAsync(Email, cancellationToken);
 
-            contact.PhoneNumber = patchContact.PhoneNumber;
-        }
+    public async ValueTask<bool> IsPhoneExistsAsync(string PhoneNumber, CancellationToken cancellationToken = default)
+        => await repository.IsPhoneExistsAsync(PhoneNumber, cancellationToken);
 
-        contact.FirstName = patchContact.FirstName ?? contact.FirstName;
-        contact.LastName = patchContact.LastName ?? contact.LastName;
-        contact.Email = patchContact.Email ?? contact.Email;
-        contact.Address = patchContact.Address ?? contact.Address;
-        contact.UpdatedAt = DateTimeOffset.UtcNow;
-
-        dbContext.Contacts.Update(contact);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return contact;
-    }
-
-    public async ValueTask<Contact> DeleteAsync(int id, CancellationToken cancellationToken = default)
-    {
-        var contact = await GetSingleAsync(id, cancellationToken);
-
-        dbContext.Contacts.Remove(contact);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return contact;
-    }
-
-    public async ValueTask<bool> ExistsAsync(string phoneNumber, CancellationToken cancellationToken = default)
-    {
-        return await dbContext.Contacts.AnyAsync(c => c.PhoneNumber == phoneNumber, cancellationToken);
-    }
+    public async ValueTask<bool> IsIdExistsAsync(int id, CancellationToken cancellationToken = default)
+        => await repository.IsIdExistsAsync(id, cancellationToken);
 }

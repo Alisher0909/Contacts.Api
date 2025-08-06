@@ -1,20 +1,24 @@
+using ContactsApi.Abstractions;
 using ContactsApi.Dtos;
-using ContactsApi.Services.Abstractions;
 using FluentValidation;
 
 namespace ContactsApi.Validators;
 
 public class CreateContactValidator : AbstractValidator<CreateContactDto>
 {
-    public CreateContactValidator()
+    public CreateContactValidator(IContactService service)
     {
         ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
 
         RuleFor(x => x.FirstName)
+            .NotEmpty()
+            .WithMessage("'FirstName' must not be empty.")
             .MinimumLength(2)
             .MaximumLength(100);
 
         RuleFor(x => x.LastName)
+            .NotEmpty()
+            .WithMessage("'LastName' must not be empty.")
             .MinimumLength(2)
             .MaximumLength(100);
 

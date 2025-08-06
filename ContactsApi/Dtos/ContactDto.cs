@@ -9,5 +9,5 @@ public class ContactDto
     public string PhoneNumber { get; set; } = default!;
     public string? Address { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }

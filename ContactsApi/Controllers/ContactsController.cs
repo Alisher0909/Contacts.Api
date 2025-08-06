@@ -1,64 +1,55 @@
-using Microsoft.AspNetCore.Mvc;
-using ContactsApi.Services;
-using ContactsApi.Dtos;
 using AutoMapper;
+using ContactsApi.Abstractions;
+using ContactsApi.Dtos;
 using ContactsApi.Models;
-using ContactsApi.Services.Abstractions;
-using Microsoft.AspNetCore.JsonPatch;
+using ContactsApi.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace ContactsApi.Controllers;
+namespace Contacts.Api.Controllers;
 
 [ApiController, Route("api/[controller]")]
-public class ContactsController(IContactService service, IMapper mapper) : Controller
+public class ContactsController(IContactService contactService, IMapper mapper) : Controller
 {
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateContactDto dto, CancellationToken cancellationToken = default
-        )
+    public async Task<IActionResult> Create([FromBody] CreateContactDto dto, CancellationToken abortionToken = default)
     {
-        var model = mapper.Map<CreateContact>(dto);
-        var created = await service.CreateContactAsync(model, cancellationToken);
-        return Ok(mapper.Map<ContactDto>(created));
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
-    {
-        var contacts = await service.GetAllAsync(cancellationToken);
-        return Ok(mapper.Map<IEnumerable<ContactDto>>(contacts));
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
-    {
-        var contact = await service.GetSingleAsync(id, cancellationToken);
+        var contact = await contactService.CreateContactAsync(mapper.Map<CreateContact>(dto), abortionToken);
         return Ok(mapper.Map<ContactDto>(contact));
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateContactDto dto, CancellationToken cancellationToken = default)
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken abortionToken = default)
     {
-        var model = mapper.Map<UpdateContact>(dto);
-        var updated = await service.UpdateContactAsync(id, model, cancellationToken);
+        var result = await contactService.GetAllContactsAsync(abortionToken);
+        return Ok(result.Select(mapper.Map<ContactDto>));
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSingle(int id, CancellationToken abortionToken = default)
+    {
+        var singleContact = await contactService.GetSingleContactAsync(id, abortionToken);
+        return Ok(mapper.Map<ContactDto>(singleContact));
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateContact(int id, [FromBody] UpdateContactDto dto ,CancellationToken abortionToken = default)
+    {
+        dto.Id = id;
+        var updated = await contactService.UpdateContactAsync(id, mapper.Map<UpdateContact>(dto) ,abortionToken);
+        return Ok(mapper.Map<ContactDto>(updated));
+    }
+    
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateSinglePropertyAsync(int id, [FromBody] PatchContactDto dto ,CancellationToken abortionToken = default)
+    {
+        var updated = await contactService.UpdateSinglePartOfContactAsync(id, mapper.Map<PatchContact>(dto) ,abortionToken);
         return Ok(mapper.Map<ContactDto>(updated));
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DeleteContactAsync(int id, CancellationToken abortionToken = default)
     {
-        var contact = await service.DeleteAsync(id, cancellationToken);
-        return Ok(mapper.Map<ContactDto>(contact));
-    }
-
-    [HttpPatch("{id}")]
-    public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<PatchContactDto> patchDoc)
-    {
-        var existing = await service.GetSingleAsync(id);
-        if (existing is null) return NotFound();
-
-        var dto = mapper.Map<PatchContactDto>(existing);
-        patchDoc.ApplyTo(dto);
-
-        var updated = await service.PatchAsync(id, mapper.Map<PatchContact>(dto));
-        return Ok(mapper.Map<ContactDto>(updated));
+        await contactService.DeleteContactAsync(id ,abortionToken);
+        return Ok($"Contact with id '{id}' is deleted");
     }
 }

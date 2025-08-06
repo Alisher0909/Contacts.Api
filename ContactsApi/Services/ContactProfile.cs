@@ -1,6 +1,7 @@
 using AutoMapper;
-using ContactsApi.Models;
 using ContactsApi.Dtos;
+using ContactsApi.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ContactsApi.Services;
 
@@ -8,15 +9,20 @@ public class ContactProfile : Profile
 {
     public ContactProfile()
     {
-        CreateMap<ContactDto, Contact>();
         CreateMap<CreateContactDto, CreateContact>();
         CreateMap<UpdateContactDto, UpdateContact>();
-        CreateMap<PatchContactDto, PatchContact>();
+        CreateMap<ContactDto, Models.Contact>();
 
-        CreateMap<Contact, ContactDto>();
-        CreateMap<Contact, PatchContactDto>();
-        CreateMap<CreateContact, Contact>();
-        CreateMap<UpdateContact, Contact>();
-        CreateMap<PatchContact, Contact>();
+        CreateMap<CreateContact, Models.Contact>();
+        CreateMap<Models.Contact, ContactDto>();
+        CreateMap<UpdateContact, Models.Contact>();
+        CreateMap<PatchContactDto, PatchContact>();
+        CreateMap<PatchContact, Models.Contact>();
+
+        CreateMap<CreateContact, Entities.Contact>();
+        CreateMap<Entities.Contact, Models.Contact>();
+        CreateMap<UpdateContact, Entities.Contact>();
+        CreateMap<PatchContact, Entities.Contact>();
+        CreateMap<Entities.Contact, UpdateContact>();
     }
 }

@@ -6,37 +6,37 @@ Content-Type: application/json
 {
   "firstName": "John",
   "lastName": "Doe",
-  "email": "john@example.com",
-  "phoneNumber": "+998900001111",
-  "address": "Lissabon, Portugal"
+  "email": "john12@email.com",
+  "phoneNumber": "+998991011010",
+  "address": "England, London"
 }
 ###
 
 GET {{Host:}}/api/contacts
 ###
 
-GET {{Host:}}/api/contacts/1
+GET {{Host:}}/api/contacts/4
 ###
 
-PATCH {{Host:}}/api/contacts/1
+PATCH {{Host:}}/api/contacts/4
 Content-Type: application/json
 
 {
-  "phoneNumber": "+998991231231"
+  "phoneNumber": "+998991231234"
 }
 ###
 
-PUT {{Host:}}/api/contacts/1
+PUT {{Host:}}/api/contacts/5
 Content-Type: application/json
 
 {
-  "firstName": "Toshmat",
-  "lastName": "Eshmatov",
-  "email": "toshmat@example.com",
-  "phoneNumber": "+998900001001",
+  "firstName": "Alisher",
+  "lastName": "Maxamadjonov",
+  "email": "alisher@gmail.com",
+  "phoneNumber": "+998331234567",
   "address": "Tashkent, Uzbekistan"
 }
 ###
 
-DELETE {{Host:}}/api/contacts/1
+DELETE {{Host:}}/api/contacts/2
 ###

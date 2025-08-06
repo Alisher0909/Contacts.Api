@@ -1,5 +1,5 @@
+using ContactsApi.Abstractions;
 using ContactsApi.Dtos;
-using ContactsApi.Services.Abstractions;
 using FluentValidation;
 
 namespace ContactsApi.Validators;
@@ -10,11 +10,20 @@ public class UpdateContactValidator : AbstractValidator<UpdateContactDto>
     {
         ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
 
+        RuleFor(c => c.Id)
+            .Cascade(CascadeMode.Stop)
+            .MustAsync(async (id, token) => await service.IsIdExistsAsync(id, token))
+            .WithMessage((dto, id) => $"Contact with id '{id}' doesn't exist.");
+
         RuleFor(x => x.FirstName)
+            .NotEmpty()
+            .WithMessage("'FirstName' must not be empty.")
             .MinimumLength(2)
             .MaximumLength(100);
 
         RuleFor(x => x.LastName)
+            .NotEmpty()
+            .WithMessage("'LastName' must not be empty.")
             .MinimumLength(2)
             .MaximumLength(100);
 
