@@ -1,13 +1,18 @@
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using ContactsApi.Filters;
 using ContactsApi.Models;
 using ContactsApi.Validators;
 using ContactsApi.Dtos;
 using ContactsApi.Middlewares;
 using ContactsApi.Services;
+using FluentValidation.AspNetCore;
 using FluentValidation;
-using ContactsApi.Abstractions;
 using ContactsApi.Database;
-using Microsoft.EntityFrameworkCore;
+using ContactsApi.Repositories.Abstractions;
+using ContactsApi.Abstractions;
+using ContactsApi.Repositories;
+using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +24,6 @@ builder.Services.AddControllers()
         jsonOptions.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
-
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<IContactService, ContactService>();
@@ -29,7 +33,7 @@ builder.Services.AddScoped<IValidator<PatchContactDto>, PatchContactValidator>()
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Contacts"))
-        .UseSnakeCaseNamingConvention());
+    .UseSnakeCaseNamingConvention());
 
 var app = builder.Build();
 

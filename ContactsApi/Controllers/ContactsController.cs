@@ -34,7 +34,6 @@ public class ContactsController(IContactService contactService, IMapper mapper) 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateContact(int id, [FromBody] UpdateContactDto dto ,CancellationToken abortionToken = default)
     {
-        dto.Id = id;
         var updated = await contactService.UpdateContactAsync(id, mapper.Map<UpdateContact>(dto) ,abortionToken);
         return Ok(mapper.Map<ContactDto>(updated));
     }

@@ -12,8 +12,9 @@ public class UpdateContactValidator : AbstractValidator<UpdateContactDto>
 
         RuleFor(c => c.Id)
             .Cascade(CascadeMode.Stop)
-            .MustAsync(async (id, token) => await service.IsIdExistsAsync(id, token))
-            .WithMessage((dto, id) => $"Contact with id '{id}' doesn't exist.");
+            .Must(id => service.IsIdExistsAsync(id, CancellationToken.None)
+                .GetAwaiter().GetResult())
+            .WithMessage(id => $"Contact with id '{id}' doesn't exist.");
 
         RuleFor(x => x.FirstName)
             .NotEmpty()
@@ -29,8 +30,10 @@ public class UpdateContactValidator : AbstractValidator<UpdateContactDto>
 
         RuleFor(x => x.Email)
             .EmailAddress()
-            .When(x => x.Email is { Length: > 0 })
-            .WithMessage("Email address is invalid.");
+            .Must(email => !service.IsEmailExistsAsync(email, CancellationToken.None)
+                .GetAwaiter().GetResult())
+            .WithMessage("Email address must be unique.")
+            .When(x => !string.IsNullOrEmpty(x.Email));
 
         RuleFor(x => x.PhoneNumber)
             .NotEmpty()
@@ -40,11 +43,5 @@ public class UpdateContactValidator : AbstractValidator<UpdateContactDto>
                         phone[0] == '+' &&
                         phone.Skip(1).All(char.IsDigit))
             .WithMessage("'PhoneNumber' must start with '+998' and contain only digits after '+'.");
-            
-        
-        RuleFor(x => x)
-            .MustAsync(async (dto, token)
-                => await service.ExistsAsync(dto.PhoneNumber!, token) is false)
-            .WithMessage("'PhoneNumber' must be unique.");
     }   
 }

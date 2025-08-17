@@ -4,37 +4,39 @@ POST {{Host:}}/api/contacts
 Content-Type: application/json
 
 {
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john12@email.com",
+  "firstName": "Alisher",
+  "lastName": "Maxamadjonov",
+  "email": "maxamadjonov@gmail.com",
   "phoneNumber": "+998991011010",
-  "address": "England, London"
+  "address": "Tashkent, Uzbekistan"
 }
 ###
 
 GET {{Host:}}/api/contacts
 ###
 
-GET {{Host:}}/api/contacts/4
+GET {{Host:}}/api/contacts/2
 ###
 
-PATCH {{Host:}}/api/contacts/4
+PATCH {{Host:}}/api/contacts/1
 Content-Type: application/json
 
 {
+  "id": 3,
   "phoneNumber": "+998991231234"
 }
 ###
 
-PUT {{Host:}}/api/contacts/5
+PUT {{Host:}}/api/contacts/1
 Content-Type: application/json
 
 {
-  "firstName": "Alisher",
-  "lastName": "Maxamadjonov",
-  "email": "alisher@gmail.com",
+  "id": 1,
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@gmail.com",
   "phoneNumber": "+998331234567",
-  "address": "Tashkent, Uzbekistan"
+  "address": "England, London"
 }
 ###
 

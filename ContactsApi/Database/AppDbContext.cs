@@ -11,5 +11,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
                 modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
                 base.OnModelCreating(modelBuilder);
+
+                modelBuilder.HasAnnotation("Relational:HistoryTableName", "__EFMigrationsHistory");
+                modelBuilder.HasAnnotation("Relational:HistoryTableSchema", "public");
+                modelBuilder.HasDefaultSchema("public");
         }
 }
